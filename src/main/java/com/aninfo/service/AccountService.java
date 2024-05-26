@@ -59,10 +59,24 @@ public class AccountService {
         }
 
         Account account = accountRepository.findAccountByCbu(cbu);
-        account.setBalance(account.getBalance() + sum);
+        Double extra = setPromo(sum);
+
+        account.setBalance(account.getBalance() + sum + extra);
         accountRepository.save(account);
 
         return account;
+    }
+
+    public Double setPromo(Double transactionAmount) {
+        double extra =  0.0;
+        if(transactionAmount >= 2000) {
+            if(transactionAmount*0.10 < 500) {
+                extra = transactionAmount*0.10;
+            } else {
+                extra = 500.0;
+            }
+        }
+        return extra;
     }
 
 }
