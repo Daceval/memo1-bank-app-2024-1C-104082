@@ -1,7 +1,10 @@
 package com.aninfo;
 
+import com.aninfo.exceptions.InvalidTransactionTypeException;
 import com.aninfo.model.Account;
+import com.aninfo.model.TransactionEntity;
 import com.aninfo.service.AccountService;
+import com.aninfo.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,9 +26,13 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @SpringBootApplication
 @EnableSwagger2
 public class Memo1BankApp {
+	private final String DEPOSIT = "deposit";
+	private final String WITHDRAW = "withdraw";
 
 	@Autowired
 	private AccountService accountService;
+	@Autowired
+	private TransactionService transactionService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(Memo1BankApp.class, args);
@@ -74,6 +81,37 @@ public class Memo1BankApp {
 	public Account deposit(@PathVariable Long cbu, @RequestParam Double sum) {
 		return accountService.deposit(cbu, sum);
 	}
+
+	@DeleteMapping("/transactions/{transactionId}")
+	public void deleteTransaction(@PathVariable Long transactionId) {
+		transactionService.deleteTransaction(transactionId);
+	}
+
+	@PostMapping("/transactions")
+	@ResponseStatus(HttpStatus.CREATED)
+	public TransactionEntity createTransaction(@RequestBody TransactionEntity transaction) {
+		switch (transaction.getType()) {
+			case DEPOSIT : {
+				return transactionService.createDeposit(transaction);
+			}
+			case WITHDRAW: {
+				return transactionService.createWithdraw(transaction);
+			}
+			default: {
+				throw new InvalidTransactionTypeException("type not valid");
+			}
+		}
+	}
+	@GetMapping("/transactions")
+	public Collection<TransactionEntity> getTransactions(@RequestParam Long cbu) {
+		return transactionService.getTransactions(cbu);
+	}
+
+	@GetMapping("/transactions/{transactionId}")
+	public TransactionEntity getTransaction(@PathVariable Long transactionId) {
+		return transactionService.getTransaction(transactionId);
+	}
+
 
 	@Bean
 	public Docket apiDocket() {
